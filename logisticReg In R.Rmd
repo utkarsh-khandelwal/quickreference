@@ -1,0 +1,104 @@
+---
+title: "logistic regression with regularization from scratch"
+author: "Utkarsh Khandelwal"
+date: "February 13, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+# loading libraries
+
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+
+setwd("M:/python coursera")
+```
+
+```{r}
+ex2data1 <- fread("ex2data1.txt", col.names = c("Exam1", "Exam2", "Label"))
+head(ex2data1)
+
+```
+
+
+```{r}
+# plotting the data
+
+ggplot(ex2data1) + geom_point(aes(Exam1, Exam2, color = factor(Label)))
+```
+
+Writing down the steps of logistic regression with gradient ascent.
+
+1. write a link function, that squishes a linear equation or expression into a logit type function. Basically it should return outputs between 1 and 0. It should be 0 for really small numbers and 1 for large numbers. It should be 0.5 for 0
+
+    + This link function will take in the weights %*% features vector and convert it to 0 and 1. %*% is matrix multiplication, similar to np.dot in python
+
+2. Add 1's on the data for multiplication with the intercept term
+
+3. Initialize weights with zeros, which will be number of features + 1 (for intercept)
+
+4. Define gradient. The equation of the gradient will always come as a derivative of the function you are trying to maximize or minimize
+
+5. In this case we are maximizing the log likelihood and so the gradient is the tangent to that log likelihood function
+
+```{r}
+
+sigmoid <- function(scores){
+  1 / (1 + exp(-scores))
+}
+
+# ll <- function(pass)
+  
+weights <- matrix(rep(0, ncol(ex2data1)))
+cost <- function(weights, features, label){
+  h_theta <- sigmoid(weights %*% features)
+  cost <- (1/nrow(features)) * sum(-label*log(h_theta) - (1-label)*log(1 - h_theta))
+  return(cost)
+}
+
+features <- as.matrix(cbind(1, ex2data1$Exam1, ex2data1$Exam2))
+label <- matrix(ex2data1$Label)
+
+
+logistic <- function(features, label, steps, learn){
+  
+  weights <- matrix(rep(0, ncol(ex2data1)))
+  
+  for(i in 1:steps){
+    scores <- features %*% weights
+    error <- label - sigmoid(scores)
+    
+    # updating gradient
+    
+    gradient <- t(features) %*% error
+    weights <- weights +  learn * gradient
+    
+    # h_theta <- sigmoid(scores)
+    # cost <- (1/nrow(features)) * sum(-label*log(h_theta) - (1-label)*log(1 - h_theta))
+    # print(i)
+    # print(weights)
+    # 
+  }
+  return(weights)
+}
+```
+
+```{r}
+new_weight <- logistic(features = features, label = label, 200000, 0.000005)
+
+```
+
+```{r}
+# checing accuracy of the developed model
+
+label2 <- round(sigmoid(features %*% new_weight))
+
+```
+
